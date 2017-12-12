@@ -1,10 +1,9 @@
 package com.dch.tutorial.spark.config;
 
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.SparkSession;
 
 /**
- * Configuration to create {@link JavaSparkContext} and other objects required
+ * Configuration to create {@link SparkSession} and other objects required
  * by Spark.
  * 
  * @author David.Christianto

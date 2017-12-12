@@ -16,3 +16,8 @@ Spark create ORC file from HDFS tutorial. This tutorial using `spark-submit` com
      email string
    ) stored as orc tblproperties("orc.compress"="zlib");
    ```
+3. Run with `spark-submit`
+   <br/>Build and copy jar with all dependency to directory `spark/bin`.
+   ```bash
+   $ spark/bin/spark-submit ${name}.jar
+   ```

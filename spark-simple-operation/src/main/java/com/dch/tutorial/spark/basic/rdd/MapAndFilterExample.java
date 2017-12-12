@@ -1,4 +1,4 @@
-package com.dch.tutorial.spark.rdd;
+package com.dch.tutorial.spark.basic.rdd;
 
 import java.util.Arrays;
 

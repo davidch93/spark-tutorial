@@ -1,4 +1,4 @@
-package com.dch.tutorial.spark.actions;
+package com.dch.tutorial.spark.basic.actions;
 
 import java.util.Arrays;
 import java.util.List;

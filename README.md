@@ -5,4 +5,6 @@ Tutorial project for Spark with Java 8. Apache Spark is a fast and general engin
 1. [Simple Operation](https://github.com/davidch93/spark-tutorial/tree/master/spark-simple-operation#simple-operation)<br/>
    Spark simple operation RDD Transformation and Action tutorial.
 2. [Create ORC File from HDFS](https://github.com/davidch93/spark-tutorial/tree/master/spark-create-orc-from-hdfs#create-orc-file-from-hdfs)<br/>
-   Spark create ORC file from HDFS tutorial. This tutorial using `spark-submit` command to execute projecthit, so I build plugins executable jar.
+   Spark create ORC file from HDFS tutorial. This tutorial using `spark-submit` command to execute project, so I build plugins executable jar and all depedendecies into one jar.
+3. [Create ORC File from HBase](https://github.com/davidch93/spark-tutorial/tree/master/spark-create-orc-from-hbase#create-orc-file-from-hbase)<br/>
+   Spark create ORC file from HBase tutorial. This tutorial using `spark-submit` command to execute project, so I build plugins executable jar and all depedendecies into one jar.

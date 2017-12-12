@@ -1,5 +1,5 @@
 # Create ORC File From HDFS
-Spark create ORC file from HDFS tutorial. This tutorial using `spark-submit` command to execute projecthit, so I build plugins executable jar.<br/>
+Spark create ORC file from HDFS tutorial. This tutorial using `spark-submit` command to execute project, so I build plugins executable jar and all depedendecies into one jar.<br/>
 ***Note**: If you want to run this project in console, the you must create your `hive-site.xml` in classpath and configuration for embedded metastore_db.
 
 ## Before You Start

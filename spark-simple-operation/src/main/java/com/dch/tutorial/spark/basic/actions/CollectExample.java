@@ -1,11 +1,14 @@
 package com.dch.tutorial.spark.basic.actions;
 
-import com.dch.tutorial.spark.config.SparkConfig;
+import com.dch.tutorial.spark.util.SparkUtil;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Spark with Collect action.
@@ -14,24 +17,27 @@ import java.util.List;
  */
 public class CollectExample {
 
+    private static final Logger logger = LoggerFactory.getLogger(CollectExample.class);
+
     /**
      * Collect value from {@link JavaRDD} to {@link List}.
      * <p>
      * Return an array that contains all of the elements in this RDD.
      * </p>
+     *
+     * @param numbersRDD {@link JavaRDD}
      */
-    public void collect(JavaRDD<Integer> numbersRDD) {
+    private void collect(JavaRDD<Integer> numbersRDD) {
         List<Integer> numbersList = numbersRDD.collect();
-        System.out.println(numbersList.toString());
+        logger.info("================== Result: " +
+                numbersList.stream().map(String::valueOf).collect(Collectors.joining(",")));
     }
 
     public static void main(String... args) {
-        JavaSparkContext context = SparkConfig.createSparkContext("local", "CollectExample");
+        JavaSparkContext context = SparkUtil.createSparkContext("local", "CollectExample");
         JavaRDD<Integer> numbersRDD = context.parallelize(Arrays.asList(0, 5, 3));
 
         CollectExample collectExample = new CollectExample();
         collectExample.collect(numbersRDD);
-
-        context.close();
     }
 }

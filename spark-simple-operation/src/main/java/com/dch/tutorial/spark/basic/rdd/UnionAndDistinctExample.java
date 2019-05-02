@@ -1,8 +1,10 @@
 package com.dch.tutorial.spark.basic.rdd;
 
-import com.dch.tutorial.spark.config.SparkConfig;
+import com.dch.tutorial.spark.util.SparkUtil;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.api.java.JavaSparkContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
@@ -13,15 +15,19 @@ import java.util.Arrays;
  */
 public class UnionAndDistinctExample {
 
+    private static final Logger logger = LoggerFactory.getLogger(UnionAndDistinctExample.class);
+
     /**
      * Union value with {@link JavaRDD}.
      * <p>
      * Return the union of this RDD and another one.
      * </p>
+     *
+     * @param numbersRDD {@link JavaRDD}
      */
-    public void union(JavaRDD<Integer> numbers1RDD, JavaRDD<Integer> numbers2RDD) {
-        JavaRDD<Integer> unionRDD = numbers1RDD.union(numbers2RDD);
-        System.out.println(unionRDD.collect().toString());
+    private void union(JavaRDD<Integer> numbersRDD, JavaRDD<Integer> numbers2RDD) {
+        JavaRDD<Integer> unionRDD = numbersRDD.union(numbers2RDD);
+        logger.info("================== Union Result: " + unionRDD.collect().toString());
     }
 
     /**
@@ -29,14 +35,16 @@ public class UnionAndDistinctExample {
      * <p>
      * Return a new RDD containing the distinct elements in this RDD.
      * </p>
+     *
+     * @param numbersRDD {@link JavaRDD}
      */
-    public void distinct(JavaRDD<Integer> numbers1RDD) {
-        JavaRDD<Integer> distinctRDD = numbers1RDD.distinct();
-        System.out.println(distinctRDD.collect().toString());
+    private void distinct(JavaRDD<Integer> numbersRDD) {
+        JavaRDD<Integer> distinctRDD = numbersRDD.distinct();
+        logger.info("================== Distinct Result: " + distinctRDD.collect().toString());
     }
 
     public static void main(String... args) {
-        JavaSparkContext context = SparkConfig.createSparkContext("local", "UnionAndDistinctExample");
+        JavaSparkContext context = SparkUtil.createSparkContext("local", "UnionAndDistinctExample");
 
         JavaRDD<Integer> numbers1RDD = context.parallelize(Arrays.asList(0, 5, 3, 0));
         JavaRDD<Integer> numbers2RDD = context.parallelize(Arrays.asList(8, 9, 3));
@@ -44,7 +52,5 @@ public class UnionAndDistinctExample {
         UnionAndDistinctExample unionAndDistinctExample = new UnionAndDistinctExample();
         unionAndDistinctExample.union(numbers1RDD, numbers2RDD);
         unionAndDistinctExample.distinct(numbers1RDD);
-
-        context.close();
     }
 }

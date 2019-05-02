@@ -1,21 +1,19 @@
-package com.dch.tutorial.spark.config;
+package com.dch.tutorial.spark.util;
 
 import org.apache.spark.SparkConf;
 import org.apache.spark.api.java.JavaSparkContext;
 
 /**
- * Configuration to create {@link JavaSparkContext} and other objects required
- * by Spark.
- * <p>
- * <b>*NOTE</b><br/>
+ * Util class to create {@link JavaSparkContext} and other objects required by Spark.
+ *
+ * <p><b>*NOTE</b><br/>
  * This example project doesn't use SparkQL so I'm just use {@link SparkConf}.
  * If you want to use SparkQL, then you must add new dependency
  * spark-sql-${scala.version} and use SparkSession instead of.
- * </p>
  *
  * @author David.Christianto
  */
-public class SparkConfig {
+public class SparkUtil {
 
     /**
      * Method used to create default configuration {@link SparkConf} by master and

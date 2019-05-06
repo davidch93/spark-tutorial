@@ -20,5 +20,6 @@
         <module>spark-simple-operation</module>
         <module>spark-create-orc-from-hbase</module>
         <module>spark-create-orc-from-hdfs</module>
+        <module>spark-structure-streaming</module>
     </modules>
 </project>

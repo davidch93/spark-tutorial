@@ -47,15 +47,16 @@ public class SampleSparkStructureStreamerJob implements SparkStructureStreamerJo
 
     @Override
     public void execute(SparkSession spark) throws Exception {
-        Dataset<Row> dataset1 = readStream(spark, TOPIC_1, SCHEMA_1);
-        Dataset<Row> dataset2 = readStream(spark, TOPIC_2, SCHEMA_2);
+        Dataset<Row> dataset1 = readStream(spark, TOPIC_1, SCHEMA_1).as("pim");
+        Dataset<Row> dataset2 = readStream(spark, TOPIC_2, SCHEMA_2).as("pi");
         /*
-         * select *
+         * select pim.*, pi.state, pi.payment_method
          * from payment_invoiceable_mappers pim
          * inner join payment_invoices pi
          * where pim.invoice_id = pi.id
          */
-        Dataset<Row> result = dataset1.join(dataset2, dataset1.col("invoice_id").equalTo(dataset2.col("id")));
+        Dataset<Row> result = dataset1.join(dataset2, dataset1.col("pim.invoice_id").equalTo(dataset2.col("pi.id")))
+                .select(column("pim.*"), column("pi.state"), column("pi.payment_method"));
         StreamingQuery query = result.writeStream()
                 .outputMode(OutputMode.Append())
                 .format("console")
@@ -77,11 +78,11 @@ public class SampleSparkStructureStreamerJob implements SparkStructureStreamerJo
                 .option("kafka.bootstrap.servers", BOOTSTRAP_SERVERS)
                 .option("subscribe", topic)
                 .load()
-                .selectExpr("CAST(value AS STRING)")
+                .select(column("value").cast(DataTypes.StringType))
                 .filter(this::isNotTombStoneFlag)
-                .map((MapFunction<Row, String>) this::transform, Encoders.STRING()).as("value")
+                .map((MapFunction<Row, String>) this::transform, Encoders.STRING())
                 .select(from_json(column("value"), schema).as("data"))
-                .select("data.*");
+                .select(column("data.*"));
     }
 
     /**

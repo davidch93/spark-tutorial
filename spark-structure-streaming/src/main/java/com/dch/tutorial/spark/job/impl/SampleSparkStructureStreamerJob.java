@@ -3,6 +3,7 @@ package com.dch.tutorial.spark.job.impl;
 import com.dch.tutorial.spark.job.SparkStructureStreamerJob;
 import com.dch.tutorial.spark.util.JsonUtil;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.spark.api.java.function.MapFunction;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
@@ -13,8 +14,7 @@ import org.apache.spark.sql.streaming.StreamingQuery;
 import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructType;
 
-import static org.apache.spark.sql.functions.column;
-import static org.apache.spark.sql.functions.from_json;
+import static org.apache.spark.sql.functions.*;
 
 /**
  * Example structure streaming job uses Spark that will use Debezium format for MySQL to aggregate records.
@@ -26,37 +26,62 @@ import static org.apache.spark.sql.functions.from_json;
  */
 public class SampleSparkStructureStreamerJob implements SparkStructureStreamerJob {
 
-    private static final String BOOTSTRAP_SERVERS = "172.18.11.94:9092,172.18.11.110:9092,172.18.12.110:9092";
-    private static final String TOPIC_1 = "payment_invoiceable_mappers";
-    private static final String TOPIC_2 = "payment_invoices";
+    private static final String BOOTSTRAP_SERVERS = "localhost:9092";
+    private static final String TOPIC_1 = "remote_transactions";
+    private static final String TOPIC_2 = "payment_invoiceable_mappers";
+    private static final String TOPIC_3 = "payment_invoices";
     private static final StructType SCHEMA_1 = new StructType()
+            .add("id", DataTypes.LongType)
+            .add("amount", DataTypes.LongType)
+            .add("paid_at", DataTypes.LongType)
+            .add("remote_type", DataTypes.StringType)
+            .add("timestamp", DataTypes.TimestampType);
+    private static final StructType SCHEMA_2 = new StructType()
             .add("id", DataTypes.LongType)
             .add("invoice_id", DataTypes.LongType)
             .add("invoiceable_id", DataTypes.LongType)
             .add("invoiceable_type", DataTypes.StringType)
-            .add("enum_invoiceable_type", DataTypes.IntegerType);
-    private static final StructType SCHEMA_2 = new StructType()
+            .add("timestamp", DataTypes.TimestampType);
+    private static final StructType SCHEMA_3 = new StructType()
             .add("id", DataTypes.LongType)
-            .add("invoice_id", DataTypes.StringType)
-            .add("state", DataTypes.StringType)
-            .add("payment_method", DataTypes.StringType)
-            .add("coded_amount", DataTypes.IntegerType)
-            .add("paid_at", DataTypes.LongType)
-            .add("created_at", DataTypes.LongType)
-            .add("updated_at", DataTypes.LongType);
+            .add("service_fee", DataTypes.LongType)
+            .add("uniq_code", DataTypes.LongType)
+            .add("timestamp", DataTypes.TimestampType);
 
     @Override
     public void execute(SparkSession spark) throws Exception {
-        Dataset<Row> dataset1 = readStream(spark, TOPIC_1, SCHEMA_1).as("pim");
-        Dataset<Row> dataset2 = readStream(spark, TOPIC_2, SCHEMA_2).as("pi");
+        Dataset<Row> dataset1 = readStream(spark, TOPIC_1, SCHEMA_1).as("rt")
+                .withWatermark("timestamp", "10 seconds")
+                .dropDuplicates(new String[]{"id", "timestamp"});
+        Dataset<Row> dataset2 = readStream(spark, TOPIC_2, SCHEMA_2).as("pim")
+                .withWatermark("timestamp", "10 seconds")
+                .dropDuplicates(new String[]{"id", "timestamp"});
+        Dataset<Row> dataset3 = readStream(spark, TOPIC_3, SCHEMA_3).as("pi")
+                .withWatermark("timestamp", "10 seconds")
+                .dropDuplicates(new String[]{"id", "timestamp"});
         /*
-         * select pim.*, pi.state, pi.payment_method
-         * from payment_invoiceable_mappers pim
+         * select rt.*, pim.invoice_id, pi.service_fee, pi.uniq_code
+         * from remote_transactions rt
+         * inner join payment_invoiceable_mappers pim
+         *   on pim.invoiceable_id = rt.id AND
+         *     pim.invoiceable_type = 'Remote::Transaction' AND
+         *     rt.timestamp >= pim.timestamp - interval 10 seconds AND
+         *     rt.timestamp <= pim.timestamp + interval 3 weeks
          * inner join payment_invoices pi
-         * where pim.invoice_id = pi.id
+         *   on pi.id = pim.invoice_id AND
+         *     pi.timestamp >= pim.timestamp - interval 10 seconds AND
+         *     pi.timestamp <= pim.timestamp + interval 3 weeks
          */
-        Dataset<Row> result = dataset1.join(dataset2, dataset1.col("pim.invoice_id").equalTo(dataset2.col("pi.id")))
-                .select(column("pim.*"), column("pi.state"), column("pi.payment_method"));
+        Dataset<Row> result = dataset1
+                .join(dataset2, expr("pim.invoiceable_id = rt.id AND " +
+                        "pim.invoiceable_type = 'Remote::Transaction' AND " +
+                        "rt.timestamp >= pim.timestamp - interval 10 seconds AND " +
+                        "rt.timestamp <= pim.timestamp + interval 3 weeks"))
+                .join(dataset3, expr("pi.id = pim.invoice_id AND " +
+                        "pi.timestamp >= pim.timestamp - interval 10 seconds AND " +
+                        "pi.timestamp <= pim.timestamp + interval 3 weeks"))
+                .select(column("rt.*"), column("pim.invoice_id"), column("pi.service_fee"), column("pi.uniq_code"))
+                .drop(column("rt.timestamp"));
         StreamingQuery query = result.writeStream()
                 .outputMode(OutputMode.Append())
                 .format("console")
@@ -107,7 +132,9 @@ public class SampleSparkStructureStreamerJob implements SparkStructureStreamerJo
         String operation = payload.get("op").asText();
         if (operation.equalsIgnoreCase("r") || operation.equalsIgnoreCase("c") ||
                 operation.equalsIgnoreCase("u")) {
-            return payload.get("after").toString();
+            JsonNode body = payload.get("after");
+            ((ObjectNode) body).put("timestamp", payload.get("ts_ms").asLong() / 1000L);
+            return body.toString();
         }
 
         throw new RuntimeException(String.format("Unsupported operation type '%s'! Record: %s", operation, row));

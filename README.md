@@ -8,3 +8,5 @@ Tutorial project for Spark with Java 8. Apache Spark is a fast and general engin
    Spark create ORC file from HDFS tutorial. This tutorial using `spark-submit` command to execute project, so I build plugins executable jar and all depedendecies into one jar.
 3. [Create ORC File from HBase](https://github.com/davidch93/spark-tutorial/tree/master/spark-create-orc-from-hbase#create-orc-file-from-hbase)<br/>
    Spark create ORC file from HBase tutorial. This tutorial using `spark-submit` command to execute project, so I build plugins executable jar and all depedendecies into one jar.
+4. [Spark Structure Streaming](https://github.com/davidch93/spark-tutorial/tree/master/spark-structure-streaming#spark-structure-streaming)<br/>
+   Spark Structure Streaming tutorial that stream data from Kafka, do some transformation, join data stream, and then write the result to output destination. For more detail about [Spark Structure Streaming](https://spark.apache.org/docs/latest/structured-streaming-programming-guide.html).
